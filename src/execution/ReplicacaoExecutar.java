@@ -28,19 +28,20 @@ public class ReplicacaoExecutar {
 	private String connStringOrigem;
 	private String connStringDest;
 
+	public Thread minhaTheadr;
+	public boolean exec = false;
+	
 	public ReplicacaoExecutar(long sleepReplication, String connOrigem, String connDest) throws SQLException {
-
 		connStringOrigem = connOrigem;
 		connStringDest = connDest;
-		new Thread(new Runnable() {
+		minhaTheadr = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					while (!Thread.currentThread().isInterrupted()) {
+					while (exec) {
 						connectionControle = ConnectionFactory.getConnection(
 								"jdbc:postgresql://localhost:5432/Controle", "postgres", "1KUkd2HXpelZ7TkV6zU2",
 								ConnectionFactory.TIPO_BANCO_POSTGRES);
-
 						if (connectionControle != null) {
 							processoVerificar();
 						} else {
@@ -52,14 +53,16 @@ public class ReplicacaoExecutar {
 					e.printStackTrace();
 				}
 			}
-		}).start();
+		});
+		
+		minhaTheadr.start();
 	}
 
 	private void processoVerificar() throws SQLException {
 
 		ProcessoDAO dao = new ProcessoDAO(connectionControle);
 		ArrayList<Processo> resultado = dao.selectAll();
-
+		
 		for (Processo p : resultado) {
 			System.out.println("Processo: " + p.getNome_processo() + " Status: " + p.isHabilitado());
 			direcaoVerificar(p.getId());
@@ -110,10 +113,10 @@ public class ReplicacaoExecutar {
 			case 1:
 				if (!CheckTableExists(tp)) {
 					System.out
-							.println("A tabela " + tp.getNome_tabela_origem() + " não existe banco de dados destino.");
+							.println("  A tabela " + tp.getNome_tabela_origem() + " não existe banco de dados destino.");
 					syncTables(tp);
 				} else {
-					System.out.println("A tabela " + tp.getNome_tabela_origem() + " já existe banco de dados destino.");
+					System.out.println("  A tabela " + tp.getNome_tabela_origem() + " já existe banco de dados destino.");
 				}
 				break;
 			case 2:
@@ -132,7 +135,7 @@ public class ReplicacaoExecutar {
 					}
 
 					insertQuery.delete(insertQuery.length() - 2, insertQuery.length());
-					insertQuery.append(")");
+					insertQuery.append(");");
 					System.out.println(insertQuery.toString());
 					destinationStatement.executeUpdate(insertQuery.toString());	
 				}
@@ -143,7 +146,6 @@ public class ReplicacaoExecutar {
 			}
 		}
 	}
-
 	private boolean CheckTableExists(TabelaProcessar table) throws SQLException {
 		DatabaseMetaData metaData = (DatabaseMetaData) connectionDestino.getMetaData();
 		ResultSet tables = metaData.getTables(null, null, table.getNome_tabela_origem(), null);
@@ -192,6 +194,6 @@ public class ReplicacaoExecutar {
 		statementDest.execute(createTableQuery.toString());
 		statementDest.execute(createTableConstraint.toString());
 
-		System.out.println("	A tabela " + table.getNome_tabela_dest() + " replicada com sucesso!");
+		System.out.println("	A tabela " + table.getNome_tabela_dest() + " criada com sucesso!");
 	}
 }

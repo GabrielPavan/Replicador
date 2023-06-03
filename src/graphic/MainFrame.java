@@ -66,10 +66,14 @@ public class MainFrame extends JFrame {
 		btnIniciarReplicação.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					if( replicacao == null) {
-						replicacao = new ReplicacaoExecutar(45000, origem, destino);
+					if (replicacao == null) {
+						replicacao = new ReplicacaoExecutar(2000, origem, destino);
+					}
+					replicacao.exec = !replicacao.exec;
+					if( replicacao.exec) {
 						btnIniciarReplicação.setText("Parar");
 					} else {
+						replicacao = null;
 						btnIniciarReplicação.setText("Iniciar");
 					}
 					
