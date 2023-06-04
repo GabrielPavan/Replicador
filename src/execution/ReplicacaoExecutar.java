@@ -30,9 +30,6 @@ public class ReplicacaoExecutar extends Thread {
 	private Connection connectionDestino;
 	private Connection connectionControle;
 
-	public Thread minhaTheadr;
-	public boolean exec = false;
-
 	private MainFrame frame;
 
 	public ReplicacaoExecutar(MainFrame frame) {
@@ -68,7 +65,6 @@ public class ReplicacaoExecutar extends Thread {
 			}
 		} catch (SQLException | InterruptedException e) {
 			setLabelText("Replicação pausada!");
-
 			Thread.currentThread().interrupt();
 		}
 	}
@@ -122,13 +118,12 @@ public class ReplicacaoExecutar extends Thread {
 	private void tabelasProcessar(int id_processo) throws SQLException {
 		TabelaProcessarDAO dao = new TabelaProcessarDAO(connectionControle);
 		ArrayList<TabelaProcessar> resultado = dao.selectAll(id_processo);
-
-		int progress = 100 / resultado.size();
-
+		
 		SwingUtilities.invokeLater(() -> {
 			JProgressBar bar = frame.getProgressBar();
 			bar.setValue(0);
 		});
+		final int progress = 100 / resultado.size();
 		for (TabelaProcessar tp : resultado) {
 			switch (id_processo) {
 			case 1:
@@ -136,14 +131,13 @@ public class ReplicacaoExecutar extends Thread {
 					System.out.println(
 							"  A tabela " + tp.getNome_tabela_origem() + " não existe banco de dados destino.");
 					CreateTables(tp);
-					SwingUtilities.invokeLater(() -> {
-						JProgressBar bar = frame.getProgressBar();
-						bar.setValue(bar.getValue() + progress);
-					});
 				} else {
-					System.out
-							.println("  A tabela " + tp.getNome_tabela_origem() + " já existe banco de dados destino.");
+					System.out.println("  A tabela " + tp.getNome_tabela_origem() + " já existe banco de dados destino.");
 				}
+				SwingUtilities.invokeLater(() -> {
+					JProgressBar bar = frame.getProgressBar();
+					bar.setValue(bar.getValue() + progress);
+				});
 				break;
 			case 2:
 				InsertIntoTables(tp, dao);
@@ -153,6 +147,8 @@ public class ReplicacaoExecutar extends Thread {
 				});
 				break;
 			case 3:
+				UpdateTables(tp);
+				
 				break;
 			}
 
@@ -162,6 +158,55 @@ public class ReplicacaoExecutar extends Thread {
 			bar.setValue(100);
 		});
 
+	}
+
+	private void UpdateTables(TabelaProcessar table) throws SQLException {
+		Statement statementOrigin = connectionOrigem.createStatement();
+		Statement statementDest = connectionDestino.createStatement();
+		
+		ResultSet resultOrigin = statementOrigin.executeQuery("SELECT * FROM " + table.getNome_tabela_origem() + " ORDER BY id ASC;");
+		ResultSet resultDest = statementDest.executeQuery("SELECT * FROM " + table.getNome_tabela_dest() + " ORDER BY id ASC;");
+		
+		ResultSetMetaData metaDataOrigin = resultOrigin.getMetaData();
+		ResultSetMetaData metaDataDest = resultDest.getMetaData();
+		
+		int columnCountOrigin = metaDataOrigin.getColumnCount();
+		int columnCountDest = metaDataDest.getColumnCount();
+		
+		if(columnCountDest == columnCountOrigin) {
+	
+			while(resultOrigin.next() && resultDest.next()) {
+				StringBuilder updateQuery = new StringBuilder("UPDATE " + table.getNome_tabela_dest() + " SET ");
+				
+				boolean updateFlag = false;
+                for (int i = 1; i <= columnCountOrigin; i++) {
+                    String columnNameOrigin = metaDataOrigin.getColumnName(i);
+                    String valueOrigin = resultOrigin.getString(i);
+                    
+                    String columnNameDest = metaDataDest.getColumnName(i);
+                    String valueDest = resultDest.getString(i);
+
+                    if(columnNameOrigin.equals(columnNameDest)) {
+                    	if(!valueOrigin.equals(valueDest)) {
+                    		updateFlag = true;
+                    		updateQuery.append(columnNameDest).append(" = '").append(valueOrigin).append("', ");
+                    	}
+                    }
+                }
+                updateQuery.delete(updateQuery.length() - 2, updateQuery.length()); 
+                updateQuery.append(" WHERE id = ").append(resultOrigin.getString("id")).append(";");
+                
+                if(updateFlag) {
+                	Statement destinationStatement = connectionDestino.createStatement();
+                	destinationStatement.executeUpdate(updateQuery.toString());
+                	System.out.println(" " + updateQuery.toString());
+                	SwingUtilities.invokeLater(() -> {
+            			JProgressBar bar = frame.getProgressBar();
+            			bar.setValue(bar.getValue() + 1);
+            		});
+                }
+			}
+		}
 	}
 
 	private boolean CheckTableExists(TabelaProcessar table) throws SQLException {
@@ -176,6 +221,7 @@ public class ReplicacaoExecutar extends Thread {
 		ResultSet result = statementOrigin.executeQuery("SELECT * FROM " + table.getNome_tabela_origem());
 
 		ResultSetMetaData metaData = result.getMetaData();
+		
 
 		StringBuilder createTableQuery = new StringBuilder("CREATE TABLE " + table.getNome_tabela_origem() + "(");
 		StringBuilder createTableConstraint = new StringBuilder();
