@@ -21,6 +21,7 @@ public class SetProcessTable extends JDialog {
 	private JTable table;
 
 	public SetProcessTable() {
+		setResizable(false);
 		setTitle("Selecione as tabelas a processar");
 		setBounds(100, 100, 775, 290);
 		getContentPane().setLayout(null);

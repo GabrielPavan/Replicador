@@ -75,8 +75,8 @@ public class ReplicacaoExecutar extends Thread {
 		ArrayList<Processo> resultado = dao.selectAll();
 
 		for (Processo p : resultado) {
-			System.out.println("Processo: " + p.getNome_processo() + " Status: " + p.isHabilitado());
-			setLabelText("Processo: " + p.getNome_processo() + " Status: " + p.isHabilitado());
+			System.out.println("Processo: " + p.getNome_processo());
+			setLabelText("Processo: " + p.getNome_processo());
 			direcaoVerificar(p.getId());
 		}
 	}
@@ -148,16 +148,13 @@ public class ReplicacaoExecutar extends Thread {
 				break;
 			case 3:
 				UpdateTables(tp);
-				
 				break;
 			}
-
 		}
 		SwingUtilities.invokeLater(() -> {
 			JProgressBar bar = frame.getProgressBar();
 			bar.setValue(100);
 		});
-
 	}
 
 	private void UpdateTables(TabelaProcessar table) throws SQLException {
