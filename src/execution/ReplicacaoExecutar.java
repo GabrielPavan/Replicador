@@ -7,6 +7,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import javax.swing.JLabel;
+import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
+
 import com.mysql.cj.jdbc.DatabaseMetaData;
 
 import database.ConnectionFactory;
@@ -18,53 +22,65 @@ import database.model.Conexoes;
 import database.model.Direcao;
 import database.model.Processo;
 import database.model.TabelaProcessar;
+import graphic.MainFrame;
 
-public class ReplicacaoExecutar {
+public class ReplicacaoExecutar extends Thread {
 
 	private Connection connectionOrigem;
 	private Connection connectionDestino;
 	private Connection connectionControle;
 
-	private String connStringOrigem;
-	private String connStringDest;
-
 	public Thread minhaTheadr;
 	public boolean exec = false;
-	
-	public ReplicacaoExecutar(long sleepReplication, String connOrigem, String connDest) throws SQLException {
-		connStringOrigem = connOrigem;
-		connStringDest = connDest;
-		minhaTheadr = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					while (exec) {
-						connectionControle = ConnectionFactory.getConnection(
-								"jdbc:postgresql://localhost:5432/Controle", "postgres", "1KUkd2HXpelZ7TkV6zU2",
-								ConnectionFactory.TIPO_BANCO_POSTGRES);
-						if (connectionControle != null) {
-							processoVerificar();
-						} else {
-							System.out.println("Não foi possível conectar no banco de controle!");
-						}
-						Thread.sleep(sleepReplication);
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
+
+	private MainFrame frame;
+
+	public ReplicacaoExecutar(MainFrame frame) {
+		this.frame = frame;
+	}
+
+	public void setLabelText(String text) {
+		SwingUtilities.invokeLater(() -> {
+			JLabel test = frame.getLblNewLabel();
+			test.setText(text);
+		});
+	}
+
+	@Override
+	public void run() {
+
+		try {
+			while (!Thread.currentThread().isInterrupted()) {
+				connectionControle = ConnectionFactory.getConnection("localhost", "5432", "Controle", "postgres",
+						"1KUkd2HXpelZ7TkV6zU2", ConnectionFactory.TIPO_BANCO_POSTGRES);
+
+				if (connectionControle != null) {
+					setLabelText("Conectando ao DB: CONTROLE!!");
+					processoVerificar();
+				} else {
+					System.out.println("Não foi possível conectar no banco de controle!");
+				}
+				for (int i = 30; i >= 0; i--) {
+					final int progress = i;
+					setLabelText("Proxima Replicação em: " + progress + " Segundos");
+					Thread.sleep(1000);
 				}
 			}
-		});
-		
-		minhaTheadr.start();
+		} catch (SQLException | InterruptedException e) {
+			setLabelText("Replicação pausada!");
+
+			Thread.currentThread().interrupt();
+		}
 	}
 
 	private void processoVerificar() throws SQLException {
 
 		ProcessoDAO dao = new ProcessoDAO(connectionControle);
 		ArrayList<Processo> resultado = dao.selectAll();
-		
+
 		for (Processo p : resultado) {
 			System.out.println("Processo: " + p.getNome_processo() + " Status: " + p.isHabilitado());
+			setLabelText("Processo: " + p.getNome_processo() + " Status: " + p.isHabilitado());
 			direcaoVerificar(p.getId());
 		}
 	}
@@ -82,16 +98,15 @@ public class ReplicacaoExecutar {
 	private void conexoesVerificar(int id_conexao_origem, int id_conexao_destino, int id_processo) throws SQLException {
 
 		ConexoesDAO dao = new ConexoesDAO(connectionControle);
-		Conexoes conexoes = dao.SelectAll(id_conexao_origem);
+		Conexoes conexoes = dao.SelectAllById(id_conexao_origem);
 
-		// Faz a conexão no banco de controle ...
-		connectionOrigem = ConnectionFactory.getConnection(connStringOrigem, conexoes.getUsuario(), conexoes.getSenha(),
-				conexoes.getTipo_banco());
+		connectionOrigem = ConnectionFactory.getConnection(conexoes.getEndereco_ip(), conexoes.getEndereco_porta(),
+				conexoes.getNome_banco(), conexoes.getUsuario(), conexoes.getSenha(), conexoes.getTipo_banco());
 		if (connectionOrigem != null) {
 
-			conexoes = dao.SelectAll(id_conexao_destino);
-			connectionDestino = ConnectionFactory.getConnection(connStringDest, conexoes.getUsuario(),
-					conexoes.getSenha(), conexoes.getTipo_banco());
+			conexoes = dao.SelectAllById(id_conexao_destino);
+			connectionDestino = ConnectionFactory.getConnection(conexoes.getEndereco_ip(), conexoes.getEndereco_porta(),
+					conexoes.getNome_banco(), conexoes.getUsuario(), conexoes.getSenha(), conexoes.getTipo_banco());
 			if (connectionDestino != null) {
 				tabelasProcessar(id_processo);
 			} else {
@@ -108,51 +123,54 @@ public class ReplicacaoExecutar {
 		TabelaProcessarDAO dao = new TabelaProcessarDAO(connectionControle);
 		ArrayList<TabelaProcessar> resultado = dao.selectAll(id_processo);
 
+		int progress = 100 / resultado.size();
+
+		SwingUtilities.invokeLater(() -> {
+			JProgressBar bar = frame.getProgressBar();
+			bar.setValue(0);
+		});
 		for (TabelaProcessar tp : resultado) {
 			switch (id_processo) {
 			case 1:
 				if (!CheckTableExists(tp)) {
-					System.out
-							.println("  A tabela " + tp.getNome_tabela_origem() + " não existe banco de dados destino.");
-					syncTables(tp);
+					System.out.println(
+							"  A tabela " + tp.getNome_tabela_origem() + " não existe banco de dados destino.");
+					CreateTables(tp);
+					SwingUtilities.invokeLater(() -> {
+						JProgressBar bar = frame.getProgressBar();
+						bar.setValue(bar.getValue() + progress);
+					});
 				} else {
-					System.out.println("  A tabela " + tp.getNome_tabela_origem() + " já existe banco de dados destino.");
+					System.out
+							.println("  A tabela " + tp.getNome_tabela_origem() + " já existe banco de dados destino.");
 				}
 				break;
 			case 2:
-				Statement sourceStatement = connectionOrigem.createStatement();
-				ResultSet resultSet = sourceStatement.executeQuery("SELECT * FROM " + tp.getNome_tabela_origem() +" WHERE id > " + tp.getCondição());
-				ResultSetMetaData metaData = resultSet.getMetaData();
-				int columnCount = metaData.getColumnCount();
-				Statement destinationStatement = connectionDestino.createStatement();
-				while (resultSet.next()) {
-					StringBuilder insertQuery = new StringBuilder(
-							"INSERT INTO " + tp.getNome_tabela_dest() + " VALUES (");
-
-					for (int i = 1; i <= columnCount; i++) {
-						String value = resultSet.getString(i);
-						insertQuery.append("'").append(value).append("', ");
-					}
-
-					insertQuery.delete(insertQuery.length() - 2, insertQuery.length());
-					insertQuery.append(");");
-					System.out.println(insertQuery.toString());
-					destinationStatement.executeUpdate(insertQuery.toString());	
-				}
-				resultSet = destinationStatement.executeQuery("SELECT MAX(id) as max FROM " +  tp.getNome_tabela_dest());
-				if(resultSet.next()) {
-					dao.updateCondicao(tp.getId(), resultSet.getInt("max"));	
-				}
+				InsertIntoTables(tp, dao);
+				SwingUtilities.invokeLater(() -> {
+					JProgressBar bar = frame.getProgressBar();
+					bar.setValue(bar.getValue() + progress);
+				});
+				break;
+			case 3:
+				break;
 			}
+
 		}
+		SwingUtilities.invokeLater(() -> {
+			JProgressBar bar = frame.getProgressBar();
+			bar.setValue(100);
+		});
+
 	}
+
 	private boolean CheckTableExists(TabelaProcessar table) throws SQLException {
 		DatabaseMetaData metaData = (DatabaseMetaData) connectionDestino.getMetaData();
 		ResultSet tables = metaData.getTables(null, null, table.getNome_tabela_origem(), null);
 		return tables.next();
 	}
 
-	private void syncTables(TabelaProcessar table) throws SQLException {
+	private void CreateTables(TabelaProcessar table) throws SQLException {
 		Statement statementOrigin = connectionOrigem.createStatement();
 		Statement statementDest = connectionDestino.createStatement();
 		ResultSet result = statementOrigin.executeQuery("SELECT * FROM " + table.getNome_tabela_origem());
@@ -178,7 +196,7 @@ public class ReplicacaoExecutar {
 			}
 			if (columnType.equalsIgnoreCase("date")) {
 				createTableQuery.append(columnName).append(" ").append(columnType).append(", ");
-			} else if (columnType.equalsIgnoreCase("numeric")) {
+			} else if (columnType.equalsIgnoreCase("numeric") || columnType.equalsIgnoreCase("float8")) {
 				createTableQuery.append(columnName).append(" ").append("decimal").append("(").append("13")
 						.append(", 2), ");
 			} else {
@@ -187,13 +205,38 @@ public class ReplicacaoExecutar {
 			}
 
 		}
-		createTableQuery.delete(createTableQuery.length() - 2, createTableQuery.length()); // Remover a última vírgula e
-																							// espaço
+		createTableQuery.delete(createTableQuery.length() - 2, createTableQuery.length());
 		createTableQuery.append(");");
 
 		statementDest.execute(createTableQuery.toString());
 		statementDest.execute(createTableConstraint.toString());
 
 		System.out.println("	A tabela " + table.getNome_tabela_dest() + " criada com sucesso!");
+	}
+
+	private void InsertIntoTables(TabelaProcessar table, TabelaProcessarDAO dao) throws SQLException {
+		Statement sourceStatement = connectionOrigem.createStatement();
+		ResultSet resultSet = sourceStatement
+				.executeQuery("SELECT * FROM " + table.getNome_tabela_origem() + " WHERE id > " + table.getCondição());
+		ResultSetMetaData metaData = resultSet.getMetaData();
+		int columnCount = metaData.getColumnCount();
+		Statement destinationStatement = connectionDestino.createStatement();
+		while (resultSet.next()) {
+			StringBuilder insertQuery = new StringBuilder("INSERT INTO " + table.getNome_tabela_dest() + " VALUES (");
+
+			for (int i = 1; i <= columnCount; i++) {
+				String value = resultSet.getString(i);
+				insertQuery.append("'").append(value).append("', ");
+			}
+
+			insertQuery.delete(insertQuery.length() - 2, insertQuery.length());
+			insertQuery.append(");");
+			System.out.println(" " + insertQuery.toString());
+			destinationStatement.executeUpdate(insertQuery.toString());
+		}
+		resultSet = destinationStatement.executeQuery("SELECT MAX(id) as max FROM " + table.getNome_tabela_dest());
+		if (resultSet.next()) {
+			dao.updateCondicao(table.getId(), resultSet.getInt("max"));
+		}
 	}
 }

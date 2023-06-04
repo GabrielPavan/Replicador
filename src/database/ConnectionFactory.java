@@ -11,13 +11,15 @@ public class ConnectionFactory {
 
 	public static Connection getConnection
 								(
-									final String conexao,
+									final String ip,
+									final String porta,
+									final String nomeBanco,
 									final String usuario, 
 									final String senha,
 									final String tipoBanco
 								)  throws SQLException {
 		return	tipoBanco.equalsIgnoreCase("postgres")
-					? DriverManager.getConnection(conexao, usuario, senha)
-					: DriverManager.getConnection(conexao, usuario, senha);
+					? DriverManager.getConnection("jdbc:postgresql://" + ip + ":" + porta + "/" + nomeBanco, usuario, senha)
+					: DriverManager.getConnection("jdbc:mysql:// " + ip + ":" + porta + "/" + nomeBanco, usuario, senha);
 	}
 }

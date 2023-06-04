@@ -2,7 +2,7 @@ package database.model;
 
 public class TabelaProcessar {
 	Integer id, id_processo;
-	String nome_tabela_origem, nome_tabela_dest;
+	String nome_tabela_origem, nome_tabela_dest, descricaoProcesso;
 	Integer ordem, condição;
 	boolean habilitado;
 	
@@ -29,6 +29,12 @@ public class TabelaProcessar {
 	}
 	public void setNome_tabela_dest(String nome_tabela_dest) {
 		this.nome_tabela_dest = nome_tabela_dest;
+	}
+	public String getDescricaoProcesso() {
+		return descricaoProcesso;
+	}
+	public void setDescricaoProcesso(String descricaoProcesso) {
+		this.descricaoProcesso = descricaoProcesso;
 	}
 	public Integer getOrdem() {
 		return ordem;

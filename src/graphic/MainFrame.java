@@ -11,7 +11,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JMenu;
 import javax.swing.SwingConstants;
 import java.awt.event.ActionListener;
-import java.sql.SQLException;
 import java.awt.event.ActionEvent;
 import javax.swing.JProgressBar;
 import javax.swing.JButton;
@@ -22,74 +21,93 @@ import java.awt.Font;
 public class MainFrame extends JFrame {
 
 	private JPanel contentPane;
-	ReplicacaoExecutar replicacao = null;
+
+	private ReplicacaoExecutar myReplExecutar = null;
+	private boolean ThreadExec = false;
 	
-	private String origem = "jdbc:postgresql://localhost:5432/sistema", 
-				   destino = "jdbc:mysql://localhost:3306/sistema";
+	private JLabel MainLabel;
+	private JProgressBar progressBar;
 	
-	public JLabel lblNewLabel;
+	public JProgressBar getProgressBar() {
+		return progressBar;
+	}
+	public void setProgressBar(JProgressBar progressBar) {
+		this.progressBar = progressBar;
+	}
+	public JLabel getLblNewLabel() {
+		return MainLabel;
+	}
+	public void setLblNewLabel(JLabel lblNewLabel) {
+		this.MainLabel = lblNewLabel;
+	}
 	
 	public MainFrame() {
+		setTitle("Replicador versão 1.0");
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 160);
+		setBounds(100, 100, 500, 160);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-
-		setContentPane(contentPane);
 		contentPane.setLayout(null);
-		
+		setContentPane(contentPane);
+
 		JMenuBar menuBar = new JMenuBar();
-		menuBar.setBounds(0, 0, 434, 22);
-		contentPane.add(menuBar);
-		
+		menuBar.setBounds(0, 0, 484, 22);
+
 		JMenu mnNewMenu = new JMenu("Configurações");
 		menuBar.add(mnNewMenu);
-		
+
 		JMenuItem mntmNewMenuItem = new JMenuItem("Conexões");
 		mntmNewMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				SetConnectionDialog conexao = new SetConnectionDialog(origem, destino, MainFrame.this);
-				
-				origem = conexao.getOrigem();
-				destino = conexao.getDestino();
+				new SetConnections();
 			}
 		});
 		mntmNewMenuItem.setHorizontalAlignment(SwingConstants.CENTER);
 		mnNewMenu.add(mntmNewMenuItem);
 		
-		JProgressBar progressBar = new JProgressBar();
-		progressBar.setBounds(10, 81, 414, 29);
-		contentPane.add(progressBar);
-		
+		JMenuItem mntmNewMenuItem_1 = new JMenuItem("Definir tabelas");
+		mntmNewMenuItem_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				new SetProcessTable();
+			}
+		});
+		mnNewMenu.add(mntmNewMenuItem_1);
+
+		progressBar = new JProgressBar(0,100);
+		progressBar.setStringPainted(true);
+		progressBar.setBounds(10, 81, 464, 29);
+
 		JButton btnIniciarReplicação = new JButton("Iniciar");
 		btnIniciarReplicação.addActionListener(new ActionListener() {
+			
 			public void actionPerformed(ActionEvent e) {
-				try {
-					if (replicacao == null) {
-						replicacao = new ReplicacaoExecutar(2000, origem, destino);
-					}
-					replicacao.exec = !replicacao.exec;
-					if( replicacao.exec) {
-						btnIniciarReplicação.setText("Parar");
-					} else {
-						replicacao = null;
-						btnIniciarReplicação.setText("Iniciar");
-					}
-					
-				} catch (SQLException e1) {
-					e1.printStackTrace();
-				}
+				if (!ThreadExec) {
+	                if (myReplExecutar == null || !myReplExecutar.isAlive()) {
+	                    myReplExecutar = new ReplicacaoExecutar(MainFrame.this);
+	                    myReplExecutar.start();
+	                }
+	                btnIniciarReplicação.setText("Parar");
+	            } else {
+	                if (myReplExecutar != null && myReplExecutar.isAlive()) {
+	                    myReplExecutar.interrupt();
+	                }
+	                btnIniciarReplicação.setText("Iniciar");
+	            }
+				ThreadExec = !ThreadExec;
 			}
 		});
 		btnIniciarReplicação.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		btnIniciarReplicação.setBounds(319, 33, 105, 37);
+		btnIniciarReplicação.setBounds(369, 33, 105, 37);
+
+		MainLabel = new JLabel("Replicador versão 1.0");
+		MainLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
+		MainLabel.setBounds(10, 33, 349, 37);
+
+		contentPane.add(menuBar);
+		contentPane.add(progressBar);
 		contentPane.add(btnIniciarReplicação);
-		
-		JLabel lblNewLabel = new JLabel("New label");
-		lblNewLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		lblNewLabel.setBounds(10, 33, 250, 37);
-		contentPane.add(lblNewLabel);
+		contentPane.add(MainLabel);
 		setVisible(true);
 	}
 }
