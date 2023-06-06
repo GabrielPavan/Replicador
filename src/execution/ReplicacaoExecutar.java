@@ -218,10 +218,9 @@ public class ReplicacaoExecutar extends Thread {
 		ResultSet result = statementOrigin.executeQuery("SELECT * FROM " + table.getNome_tabela_origem());
 
 		ResultSetMetaData metaData = result.getMetaData();
-		
-
+	
 		StringBuilder createTableQuery = new StringBuilder("CREATE TABLE " + table.getNome_tabela_origem() + "(");
-		StringBuilder createTableConstraint = new StringBuilder();
+		StringBuilder createTableConstraint = new StringBuilder("");
 		int columnCount = metaData.getColumnCount();
 		for (int i = 1; i <= columnCount; i++) {
 			String columnName = metaData.getColumnName(i);
@@ -230,21 +229,16 @@ public class ReplicacaoExecutar extends Thread {
 
 			if (columnType.contains("bigserial")) {
 				columnType = "bigint";
-			}
-			if (columnName.equalsIgnoreCase("id")) {
+			} else if (columnName.equalsIgnoreCase("id")) {
 				createTableConstraint = new StringBuilder("ALTER TABLE `" + table.getNome_tabela_origem() + "` ");
-				createTableConstraint.append("CHANGE COLUMN `" + columnName + "` `" + columnName + "` " + columnType
-						+ " NOT NULL AUTO_INCREMENT, ");
+				createTableConstraint.append("CHANGE COLUMN `" + columnName + "` `" + columnName + "` " + columnType + " NOT NULL AUTO_INCREMENT, ");
 				createTableConstraint.append("ADD PRIMARY KEY (`" + columnName + "`);");
-			}
-			if (columnType.equalsIgnoreCase("date")) {
+			} else if (columnType.equalsIgnoreCase("date")) {
 				createTableQuery.append(columnName).append(" ").append(columnType).append(", ");
 			} else if (columnType.equalsIgnoreCase("numeric") || columnType.equalsIgnoreCase("float8")) {
-				createTableQuery.append(columnName).append(" ").append("decimal").append("(").append("13")
-						.append(", 2), ");
+				createTableQuery.append(columnName).append(" ").append("decimal").append("(").append("13").append(", 2), ");
 			} else {
-				createTableQuery.append(columnName).append(" ").append(columnType).append("(").append(columnSize)
-						.append("), ");
+				createTableQuery.append(columnName).append(" ").append(columnType).append("(").append(columnSize).append("), ");
 			}
 
 		}
@@ -252,8 +246,10 @@ public class ReplicacaoExecutar extends Thread {
 		createTableQuery.append(");");
 
 		statementDest.execute(createTableQuery.toString());
-		statementDest.execute(createTableConstraint.toString());
-
+		if (createTableQuery.length() > 0) {
+			statementDest.execute(createTableConstraint.toString());
+		}
+		
 		System.out.println("	A tabela " + table.getNome_tabela_dest() + " criada com sucesso!");
 	}
 
