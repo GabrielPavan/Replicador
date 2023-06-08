@@ -3,7 +3,6 @@ package graphic;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-
 import execution.ReplicacaoExecutar;
 
 import javax.swing.JMenuBar;
@@ -67,12 +66,22 @@ public class MainFrame extends JFrame {
 		mnNewMenu.add(mntmNewMenuItem);
 		
 		JMenuItem mntmNewMenuItem_1 = new JMenuItem("Definir tabelas");
+		mntmNewMenuItem_1.setHorizontalAlignment(SwingConstants.CENTER);
 		mntmNewMenuItem_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				new SetProcessTable();
 			}
 		});
 		mnNewMenu.add(mntmNewMenuItem_1);
+		
+		JMenuItem mntmNewMenuItem_2 = new JMenuItem("Processos");
+		mntmNewMenuItem_2.setHorizontalAlignment(SwingConstants.CENTER);
+		mntmNewMenuItem_2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				new SetProcess();
+			}
+		});
+		mnNewMenu.add(mntmNewMenuItem_2);
 
 		progressBar = new JProgressBar(0,100);
 		progressBar.setStringPainted(true);

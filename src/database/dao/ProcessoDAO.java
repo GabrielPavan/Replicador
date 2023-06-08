@@ -30,16 +30,6 @@ public class ProcessoDAO {
 			p.setHabilitado(resultado.getBoolean("habilitado"));
 			arlProcessos.add(p);
 		}
-		
 		return arlProcessos;
-		
 	}
-	
 }
-
-
-
-
-
-
-

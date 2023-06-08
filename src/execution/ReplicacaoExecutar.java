@@ -65,6 +65,7 @@ public class ReplicacaoExecutar extends Thread {
 			}
 		} catch (SQLException | InterruptedException e) {
 			setLabelText("Replicação pausada!");
+			e.printStackTrace();
 			Thread.currentThread().interrupt();
 		}
 	}
@@ -229,18 +230,20 @@ public class ReplicacaoExecutar extends Thread {
 
 			if (columnType.contains("bigserial")) {
 				columnType = "bigint";
-			} else if (columnName.equalsIgnoreCase("id")) {
+			}
+			if (columnName.equalsIgnoreCase("id")) {
 				createTableConstraint = new StringBuilder("ALTER TABLE `" + table.getNome_tabela_origem() + "` ");
 				createTableConstraint.append("CHANGE COLUMN `" + columnName + "` `" + columnName + "` " + columnType + " NOT NULL AUTO_INCREMENT, ");
 				createTableConstraint.append("ADD PRIMARY KEY (`" + columnName + "`);");
-			} else if (columnType.equalsIgnoreCase("date")) {
+			} 
+			
+			if (columnType.equalsIgnoreCase("date")) {
 				createTableQuery.append(columnName).append(" ").append(columnType).append(", ");
 			} else if (columnType.equalsIgnoreCase("numeric") || columnType.equalsIgnoreCase("float8")) {
 				createTableQuery.append(columnName).append(" ").append("decimal").append("(").append("13").append(", 2), ");
 			} else {
 				createTableQuery.append(columnName).append(" ").append(columnType).append("(").append(columnSize).append("), ");
 			}
-
 		}
 		createTableQuery.delete(createTableQuery.length() - 2, createTableQuery.length());
 		createTableQuery.append(");");

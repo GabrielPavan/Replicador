@@ -23,7 +23,7 @@ public class SetProcessTable extends JDialog {
 	public SetProcessTable() {
 		setResizable(false);
 		setTitle("Selecione as tabelas a processar");
-		setBounds(100, 100, 775, 290);
+		setBounds(100, 100, 775, 325);
 		getContentPane().setLayout(null);
 
 		JScrollPane scrollPane = new JScrollPane();
@@ -49,17 +49,19 @@ public class SetProcessTable extends JDialog {
 		table.getColumnModel().getColumn(0).setPreferredWidth(15);
 		table.getColumnModel().getColumn(0).setMinWidth(5);
 		table.getColumnModel().getColumn(1).setResizable(false);
-		table.getColumnModel().getColumn(1).setPreferredWidth(65);
+		table.getColumnModel().getColumn(1).setMinWidth(75);
 		table.getColumnModel().getColumn(2).setResizable(false);
-		table.getColumnModel().getColumn(2).setPreferredWidth(120);
+		table.getColumnModel().getColumn(2).setPreferredWidth(130);
+		table.getColumnModel().getColumn(2).setMinWidth(130);
 		table.getColumnModel().getColumn(3).setResizable(false);
-		table.getColumnModel().getColumn(3).setPreferredWidth(120);
+		table.getColumnModel().getColumn(3).setPreferredWidth(130);
+		table.getColumnModel().getColumn(3).setMinWidth(130);
 		table.getColumnModel().getColumn(4).setResizable(false);
-		table.getColumnModel().getColumn(4).setPreferredWidth(20);
+		table.getColumnModel().getColumn(4).setPreferredWidth(15);
 		table.getColumnModel().getColumn(5).setResizable(false);
-		table.getColumnModel().getColumn(5).setPreferredWidth(20);
+		table.getColumnModel().getColumn(5).setPreferredWidth(15);
 		table.getColumnModel().getColumn(6).setResizable(false);
-		table.getColumnModel().getColumn(6).setPreferredWidth(20);
+		table.getColumnModel().getColumn(6).setPreferredWidth(15);
 		scrollPane.setViewportView(table);
 
 		JButton btnSalvar = new JButton("Salvar");
@@ -68,7 +70,7 @@ public class SetProcessTable extends JDialog {
 
 			}
 		});
-		btnSalvar.setBounds(649, 215, 100, 25);
+		btnSalvar.setBounds(649, 250, 100, 25);
 		getContentPane().add(btnSalvar);
 
 		JButton btnAdicionar = new JButton("Adicionar");
@@ -77,7 +79,7 @@ public class SetProcessTable extends JDialog {
 
 			}
 		});
-		btnAdicionar.setBounds(10, 215, 100, 25);
+		btnAdicionar.setBounds(10, 250, 100, 25);
 		getContentPane().add(btnAdicionar);
 
 		preencherTabela();
