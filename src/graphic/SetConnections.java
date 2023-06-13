@@ -67,7 +67,7 @@ public class SetConnections extends JDialog {
 				dispose();
 			}
 		});
-		btnSalvar.setBounds(320, 207, 100, 23);
+		btnSalvar.setBounds(10, 207, 100, 23);
 		getContentPane().add(btnSalvar);
 		
 		JLabel lblUserOrigin = new JLabel("Usuário:");
@@ -127,7 +127,7 @@ public class SetConnections extends JDialog {
 			
 			ConexoesDAO dao = new ConexoesDAO(conn);
 			ArrayList<Conexoes> conexoes = dao.SelectAll();
-				
+			
 			Conexoes conexaoOrigem = conexoes.get(0);
 			Conexoes conexaoDestino = conexoes.get(1);
 			textFieldOrigem.setText(conexaoOrigem.getEndereco_ip() + ":" + conexaoOrigem.getEndereco_porta() + "/" + conexaoOrigem.getNome_banco());
@@ -145,6 +145,7 @@ public class SetConnections extends JDialog {
 			comboBoxOrigem.addItem(conexaoDestino.getTipo_banco());
 			comboBoxOrigem.setSelectedItem(conexaoOrigem.getTipo_banco());
 			
+			conn.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

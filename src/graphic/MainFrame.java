@@ -65,15 +65,6 @@ public class MainFrame extends JFrame {
 		mntmNewMenuItem.setHorizontalAlignment(SwingConstants.CENTER);
 		mnNewMenu.add(mntmNewMenuItem);
 		
-		JMenuItem mntmNewMenuItem_1 = new JMenuItem("Definir tabelas");
-		mntmNewMenuItem_1.setHorizontalAlignment(SwingConstants.CENTER);
-		mntmNewMenuItem_1.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				new SetProcessTable();
-			}
-		});
-		mnNewMenu.add(mntmNewMenuItem_1);
-		
 		JMenuItem mntmNewMenuItem_2 = new JMenuItem("Processos");
 		mntmNewMenuItem_2.setHorizontalAlignment(SwingConstants.CENTER);
 		mntmNewMenuItem_2.addActionListener(new ActionListener() {
@@ -114,6 +105,27 @@ public class MainFrame extends JFrame {
 		MainLabel.setBounds(10, 33, 349, 37);
 
 		contentPane.add(menuBar);
+		
+		JMenu mnNewMenu2 = new JMenu("Definições da replicação");
+		menuBar.add(mnNewMenu2);
+		
+		JMenuItem mntmNewMenuItem_3 = new JMenuItem("Tabelas");
+		mntmNewMenuItem_3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				new SetTables();
+			}
+		});
+		mntmNewMenuItem_3.setHorizontalAlignment(SwingConstants.CENTER);
+		mnNewMenu2.add(mntmNewMenuItem_3);
+		
+		JMenuItem mntmNewMenuItem_1 = new JMenuItem("Processos tabelas");
+		mnNewMenu2.add(mntmNewMenuItem_1);
+		mntmNewMenuItem_1.setHorizontalAlignment(SwingConstants.CENTER);
+		mntmNewMenuItem_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				new SetProcessTable();
+			}
+		});
 		contentPane.add(progressBar);
 		contentPane.add(btnIniciarReplicação);
 		contentPane.add(MainLabel);

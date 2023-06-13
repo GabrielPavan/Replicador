@@ -108,8 +108,7 @@ public class SetProcessTable extends JDialog {
 						tp.isHabilitado()
 					}); 
 			}
-			
-
+			conn.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
