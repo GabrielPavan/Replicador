@@ -22,7 +22,7 @@ import javax.swing.JButton;
 public class SetTables extends JDialog {
 
 	private JTree treeOrigem;
-	private DefaultMutableTreeNode rootNodeOrigem;
+	private DefaultMutableTreeNode rootNodeOrigem, rootNodeDestino;
 		
 	public SetTables() {
 		setTitle("Selecione as tabelas");
@@ -36,10 +36,12 @@ public class SetTables extends JDialog {
 		
 		buscarTabelasOrigem();
 		
-		DefaultMutableTreeNode rootNodeDestino = new DefaultMutableTreeNode("Destino");
+		rootNodeDestino = new DefaultMutableTreeNode("Destino");
 		JTree treeDestino = new JTree(rootNodeDestino);
 		treeDestino.setBounds(285, 45, 184, 285);
 		getContentPane().add(treeDestino);
+		
+		buscarTabelasDestino();
 		
 		JLabel lblDbOrigem = new JLabel("Origem");
 		lblDbOrigem.setFont(new Font("Tahoma", Font.PLAIN, 15));
@@ -83,14 +85,12 @@ public class SetTables extends JDialog {
 
 		setVisible(true);
 	}
-
 	private void buscarTabelasOrigem() {
 		try {
 			Connection connControle = ConnectionFactory.getConnection("localhost", "5432", "Controle", "postgres",
 					"1KUkd2HXpelZ7TkV6zU2", ConnectionFactory.TIPO_BANCO_POSTGRES);
 			
 			ConexoesDAO cDAO = new ConexoesDAO(connControle);
-			Conexoes STR_CONN_DESTINO = cDAO.SelectAllById(1);
 			Conexoes STR_CONN_ORIGEM = cDAO.SelectAllById(2);
 			
 			Connection connOrigem = ConnectionFactory
@@ -102,11 +102,40 @@ public class SetTables extends JDialog {
 									STR_CONN_ORIGEM.getTipo_banco());
 
             DatabaseMetaData metaData = connOrigem.getMetaData();
-            ResultSet resultSet = metaData.getTables(null, "public", "%", new String[] {"TABLE"});
+            ResultSet resultSet = metaData.getTables(STR_CONN_ORIGEM.getNome_banco(), null, "%", new String[] {"TABLE"});
             while (resultSet.next()) {
-                  String tableName = resultSet.getString("TABLE_NAME");      
+                  String tableName = resultSet.getString("TABLE_NAME");
                   DefaultMutableTreeNode table = new DefaultMutableTreeNode(tableName);
                   rootNodeOrigem.add(table);
+            }
+		} catch (Exception e) {
+			
+		}
+	}
+	
+	private void buscarTabelasDestino() {
+		try {
+			Connection connControle = ConnectionFactory.getConnection("localhost", "5432", "Controle", "postgres",
+					"1KUkd2HXpelZ7TkV6zU2", ConnectionFactory.TIPO_BANCO_POSTGRES);
+			
+			ConexoesDAO cDAO = new ConexoesDAO(connControle);
+			Conexoes STR_CONN_DESTINO = cDAO.SelectAllById(1);
+			
+			Connection connOrigem = ConnectionFactory
+					.getConnection(	STR_CONN_DESTINO.getEndereco_ip(), 
+									STR_CONN_DESTINO.getEndereco_porta(), 
+									STR_CONN_DESTINO.getNome_banco(), 
+									STR_CONN_DESTINO.getUsuario(), 
+									STR_CONN_DESTINO.getSenha(), 
+									STR_CONN_DESTINO.getTipo_banco());
+
+            DatabaseMetaData metaData = connOrigem.getMetaData();
+            ResultSet resultSet = metaData.getTables(STR_CONN_DESTINO.getNome_banco(), null, "%", new String[] {"TABLE"});
+            while (resultSet.next()) {
+                  String tableName = resultSet.getString("TABLE_NAME");
+                  System.out.println(tableName);
+                  DefaultMutableTreeNode table = new DefaultMutableTreeNode(tableName);
+                  rootNodeDestino.add(table);
             }
 		} catch (Exception e) {
 			
