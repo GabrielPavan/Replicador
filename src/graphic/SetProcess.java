@@ -12,14 +12,25 @@ import javax.swing.table.DefaultTableModel;
 import database.ConnectionFactory;
 import database.dao.ProcessoDAO;
 import database.model.Processo;
+
 import javax.swing.JLabel;
+import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 @SuppressWarnings({"serial","rawtypes","unchecked"})
 public class SetProcess extends JDialog {
 	private JTable table;
+	private String processo = "";
 	
+	public String getProcesso() {
+		return processo;
+	}
 	
-	public SetProcess() {
+	public SetProcess(JDialog parent) {
+		setResizable(false);
+		setModal(true);
+		setLocationRelativeTo(parent);
 		setTitle("Processos existentes");
 		setBounds(100, 100, 500, 225);
 		getContentPane().setLayout(null);
@@ -57,6 +68,22 @@ public class SetProcess extends JDialog {
 		lblInfo.setEnabled(false);
 		lblInfo.setBounds(10, 161, 414, 14);
 		getContentPane().add(lblInfo);
+		
+		JButton btnNewButton = new JButton("Fechar");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					int linha = table.getSelectedRow();
+					processo = table.getValueAt(linha, 0).toString();
+				} catch (Exception e2) {
+					
+				} finally {
+					dispose();
+				}
+			}
+		});
+		btnNewButton.setBounds(385, 157, 89, 23);
+		getContentPane().add(btnNewButton);
 		preencherTabela();
 		setVisible(true);
 	}

@@ -54,6 +54,7 @@ public class MainFrame extends JFrame {
 		menuBar.setBounds(0, 0, 484, 22);
 
 		JMenu mnNewMenu = new JMenu("Configurações");
+		mnNewMenu.setHorizontalAlignment(SwingConstants.CENTER);
 		menuBar.add(mnNewMenu);
 
 		JMenuItem mntmNewMenuItem = new JMenuItem("Conexões");
@@ -69,7 +70,7 @@ public class MainFrame extends JFrame {
 		mntmNewMenuItem_2.setHorizontalAlignment(SwingConstants.CENTER);
 		mntmNewMenuItem_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				new SetProcess();
+				new SetProcess(null);
 			}
 		});
 		mnNewMenu.add(mntmNewMenuItem_2);
@@ -107,6 +108,7 @@ public class MainFrame extends JFrame {
 		contentPane.add(menuBar);
 		
 		JMenu mnNewMenu2 = new JMenu("Definições da replicação");
+		mnNewMenu2.setHorizontalAlignment(SwingConstants.CENTER);
 		menuBar.add(mnNewMenu2);
 		
 		JMenuItem mntmNewMenuItem_3 = new JMenuItem("Tabelas");
