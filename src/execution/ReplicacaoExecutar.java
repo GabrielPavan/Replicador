@@ -11,8 +11,6 @@ import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 
-import com.mysql.cj.jdbc.DatabaseMetaData;
-
 import database.ConnectionFactory;
 import database.dao.ConexoesDAO;
 import database.dao.DirecaoDAO;
@@ -65,7 +63,6 @@ public class ReplicacaoExecutar extends Thread {
 			}
 		} catch (SQLException | InterruptedException e) {
 			setLabelText("Replicação pausada!");
-			e.printStackTrace();
 			Thread.currentThread().interrupt();
 		}
 	}
@@ -124,22 +121,10 @@ public class ReplicacaoExecutar extends Thread {
 			JProgressBar bar = frame.getProgressBar();
 			bar.setValue(0);
 		});
+		
 		final int progress = 100 / resultado.size();
 		for (TabelaProcessar tp : resultado) {
 			switch (id_processo) {
-			case 1:
-				if (!CheckTableExists(tp)) {
-					System.out.println(
-							"  A tabela " + tp.getNome_tabela_origem() + " não existe banco de dados destino.");
-					CreateTables(tp);
-				} else {
-					System.out.println("  A tabela " + tp.getNome_tabela_origem() + " já existe banco de dados destino.");
-				}
-				SwingUtilities.invokeLater(() -> {
-					JProgressBar bar = frame.getProgressBar();
-					bar.setValue(bar.getValue() + progress);
-				});
-				break;
 			case 2:
 				InsertIntoTables(tp, dao);
 				SwingUtilities.invokeLater(() -> {
@@ -205,55 +190,6 @@ public class ReplicacaoExecutar extends Thread {
                 }
 			}
 		}
-	}
-
-	private boolean CheckTableExists(TabelaProcessar table) throws SQLException {
-		DatabaseMetaData metaData = (DatabaseMetaData) connectionDestino.getMetaData();
-		ResultSet tables = metaData.getTables(null, null, table.getNome_tabela_origem(), null);
-		return tables.next();
-	}
-
-	private void CreateTables(TabelaProcessar table) throws SQLException {
-		Statement statementOrigin = connectionOrigem.createStatement();
-		Statement statementDest = connectionDestino.createStatement();
-		ResultSet result = statementOrigin.executeQuery("SELECT * FROM " + table.getNome_tabela_origem());
-
-		ResultSetMetaData metaData = result.getMetaData();
-	
-		StringBuilder createTableQuery = new StringBuilder("CREATE TABLE " + table.getNome_tabela_origem() + "(");
-		StringBuilder createTableConstraint = new StringBuilder("");
-		int columnCount = metaData.getColumnCount();
-		for (int i = 1; i <= columnCount; i++) {
-			String columnName = metaData.getColumnName(i);
-			String columnType = metaData.getColumnTypeName(i);
-			int columnSize = metaData.getColumnDisplaySize(i);
-
-			if (columnType.contains("bigserial")) {
-				columnType = "bigint";
-			}
-			if (columnName.equalsIgnoreCase("id")) {
-				createTableConstraint = new StringBuilder("ALTER TABLE `" + table.getNome_tabela_origem() + "` ");
-				createTableConstraint.append("CHANGE COLUMN `" + columnName + "` `" + columnName + "` " + columnType + " NOT NULL AUTO_INCREMENT, ");
-				createTableConstraint.append("ADD PRIMARY KEY (`" + columnName + "`);");
-			} 
-			
-			if (columnType.equalsIgnoreCase("date")) {
-				createTableQuery.append(columnName).append(" ").append(columnType).append(", ");
-			} else if (columnType.equalsIgnoreCase("numeric") || columnType.equalsIgnoreCase("float8")) {
-				createTableQuery.append(columnName).append(" ").append("decimal").append("(").append("13").append(", 2), ");
-			} else {
-				createTableQuery.append(columnName).append(" ").append(columnType).append("(").append(columnSize).append("), ");
-			}
-		}
-		createTableQuery.delete(createTableQuery.length() - 2, createTableQuery.length());
-		createTableQuery.append(");");
-
-		statementDest.execute(createTableQuery.toString());
-		if (createTableQuery.length() > 0) {
-			statementDest.execute(createTableConstraint.toString());
-		}
-		
-		System.out.println("	A tabela " + table.getNome_tabela_dest() + " criada com sucesso!");
 	}
 
 	private void InsertIntoTables(TabelaProcessar table, TabelaProcessarDAO dao) throws SQLException {

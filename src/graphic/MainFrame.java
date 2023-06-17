@@ -114,20 +114,12 @@ public class MainFrame extends JFrame {
 		JMenuItem mntmNewMenuItem_3 = new JMenuItem("Tabelas");
 		mntmNewMenuItem_3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				new SetTables();
+				new SetTablesProcess();
 			}
 		});
 		mntmNewMenuItem_3.setHorizontalAlignment(SwingConstants.CENTER);
 		mnNewMenu2.add(mntmNewMenuItem_3);
 		
-		JMenuItem mntmNewMenuItem_1 = new JMenuItem("Processos tabelas");
-		mnNewMenu2.add(mntmNewMenuItem_1);
-		mntmNewMenuItem_1.setHorizontalAlignment(SwingConstants.CENTER);
-		mntmNewMenuItem_1.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				new SetProcessTable();
-			}
-		});
 		contentPane.add(progressBar);
 		contentPane.add(btnIniciarReplicação);
 		contentPane.add(MainLabel);
