@@ -6,7 +6,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
@@ -54,6 +53,8 @@ public class ReplicacaoExecutar extends Thread {
 				} else {
 					System.out.println("Não foi possível conectar no banco de controle!");
 				}
+				connectionOrigem.close();
+				connectionDestino.close();
 				for (int i = 30; i >= 0; i--) {
 					final int progress = i;
 					setLabelText("Proxima Replicação em: " + progress + " Segundos");
@@ -109,7 +110,7 @@ public class ReplicacaoExecutar extends Thread {
 			bar.setValue(0);
 		});
 
-		final int progress = 100 / resultado.size();
+		final int progress = 1;
 		for (TabelaProcessar tp : resultado) {
 			switch (id_processo) {
 			case 2:
@@ -121,6 +122,9 @@ public class ReplicacaoExecutar extends Thread {
 				break;
 			case 3:
 				UpdateTables(tp);
+				break;
+			case 4:
+				DeleteIntoTables(tp);
 				break;
 			}
 		}
@@ -184,7 +188,7 @@ public class ReplicacaoExecutar extends Thread {
 	private void InsertIntoTables(TabelaProcessar table, TabelaProcessarDAO dao) throws SQLException {
 		Statement sourceStatement = connectionOrigem.createStatement();
 		ResultSet resultSet = sourceStatement
-				.executeQuery("SELECT * FROM " + table.getNome_tb_destino() + " WHERE id > " + table.getCondicao());
+				.executeQuery("SELECT * FROM " + table.getNome_tb_destino() + " WHERE id > " + table.getCondicao() + " ORDER BY id ASC;");
 		ResultSetMetaData metaData = resultSet.getMetaData();
 		int columnCount = metaData.getColumnCount();
 		Statement destinationStatement = connectionDestino.createStatement();
@@ -204,6 +208,36 @@ public class ReplicacaoExecutar extends Thread {
 		resultSet = destinationStatement.executeQuery("SELECT MAX(id) as max FROM " + table.getNome_tb_destino());
 		if (resultSet.next()) {
 			dao.updateCondicao(resultSet.getInt("max"), table.getNome_tb_destino(), table.getId_processo());
+		}
+	}
+	
+	private void DeleteIntoTables(TabelaProcessar table) throws SQLException {
+		Statement statementOrigin = connectionOrigem.createStatement();
+		Statement statementDest = connectionDestino.createStatement();
+
+		ResultSet resultOrigin = statementOrigin
+				.executeQuery("SELECT id FROM " + table.getNome_tb_destino() + " ORDER BY id ASC;");
+		ResultSet resultDest = statementDest
+				.executeQuery("SELECT id FROM " + table.getNome_tb_destino() + " ORDER BY id ASC;");
+		
+		while (resultOrigin.next() && resultDest.next()) {		
+			if(resultOrigin.getInt("id") == resultDest.getInt("id")) {
+				continue;
+			} else {
+				while(resultDest.getInt("id") < resultOrigin.getInt("id")) {
+					Statement destinationStatement = connectionDestino.createStatement();
+					destinationStatement.execute("DELETE FROM " +  table.getNome_tb_destino() + " WHERE id = " + resultDest.getInt(1));
+					System.out.println("DELETE FROM " +  table.getNome_tb_destino() + " WHERE id = " + resultDest.getInt(1));
+					destinationStatement.close();
+					resultDest.next();
+				}
+			}
+		}
+		while(resultDest.next()) {
+			Statement destinationStatement = connectionDestino.createStatement();
+			destinationStatement.execute("DELETE FROM " +  table.getNome_tb_destino() + " WHERE id = " + resultDest.getInt(1));
+			System.out.println("DELETE FROM " +  table.getNome_tb_destino() + " WHERE id = " + resultDest.getInt(1));
+			destinationStatement.close();
 		}
 	}
 }

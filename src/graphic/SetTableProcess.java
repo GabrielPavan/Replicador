@@ -4,6 +4,7 @@ import javax.swing.JDialog;
 import javax.swing.JTree;
 import javax.swing.JSeparator;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
@@ -81,6 +82,7 @@ public class SetTableProcess extends JDialog {
 							selectedNode.add(newNode);
 							DefaultTreeModel model = (DefaultTreeModel) treeDestino.getModel();
 							model.nodeStructureChanged(selectedNode);
+							JOptionPane.showMessageDialog(null, "Processo adicionado com sucesso!");
 						}
 					} catch (SQLException e1) {
 						e1.printStackTrace();
@@ -94,6 +96,34 @@ public class SetTableProcess extends JDialog {
 		getContentPane().add(btnNewButton);
 
 		JButton btnRevProcesso = new JButton("Rev. Processo");
+		btnRevProcesso.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				TreePath selectionPath = treeDestino.getSelectionPath();
+	            if (selectionPath != null) {
+	                DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) selectionPath.getLastPathComponent();
+	                if (selectedNode.isLeaf()) {
+	                	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+	                	if(parentNode != null) {
+	                		try {
+								TabelaProcessarDAO tDAO = new TabelaProcessarDAO(connControle);
+								if(tDAO.delete(parentNode.toString(), selectedNode.toString())) {
+									parentNode.remove(selectedNode);
+				                    DefaultTreeModel model = (DefaultTreeModel) treeDestino.getModel();
+				                    model.nodeStructureChanged(parentNode);
+				                    JOptionPane.showMessageDialog(null, "Processo removido com sucesso!");
+								}
+							} catch (SQLException e1) {
+								e1.printStackTrace();
+							} finally {
+								treeDestino.updateUI();
+							}
+	                	}
+	                } else {
+	                    JOptionPane.showMessageDialog(null, "Selecione um processo que deseja remover!");
+	                }
+	            }
+			}
+		});
 		btnRevProcesso.setBounds(297, 38, 132, 25);
 		getContentPane().add(btnRevProcesso);
 

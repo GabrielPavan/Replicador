@@ -6,6 +6,7 @@ public class Processo {
 	private String nome_processo;
 	private String descricao;
 	private boolean habilitado;
+	private int prioridade;
 	
 	public Processo() {
 		
@@ -42,9 +43,12 @@ public class Processo {
 	public void setHabilitado(boolean habilitado) {
 		this.habilitado = habilitado;
 	}
-	
-	
-	
-	
-	
+
+	public int getPrioridade() {
+		return prioridade;
+	}
+
+	public void setPrioridade(int prioridade) {
+		this.prioridade = prioridade;
+	}
 }

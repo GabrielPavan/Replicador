@@ -10,7 +10,7 @@ import database.model.Processo;
 
 public class ProcessoDAO {
 	
-	private String select = "select * from tb_processo where habilitado order by id asc";
+	private String select = "select * from tb_processo where habilitado order by prioridade asc";
 	private PreparedStatement pstSelect;
 	
 	public ProcessoDAO(Connection conn) throws SQLException {

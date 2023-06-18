@@ -6,11 +6,13 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import database.ConnectionFactory;
 import database.dao.ConexoesDAO;
+import database.dao.TabelaProcessarDAO;
 import database.model.Conexoes;
 import java.awt.Font;
 import java.sql.Connection;
@@ -25,6 +27,7 @@ import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Color;
+import javax.swing.ImageIcon;
 
 @SuppressWarnings("serial")
 public class SetCreateTables extends JDialog {
@@ -69,7 +72,8 @@ public class SetCreateTables extends JDialog {
 		separator.setBounds(204, 11, 10, 274);
 		getContentPane().add(separator);
 		
-		JButton btnAddDestino = new JButton(">>");
+		JButton btnAddDestino = new JButton("");
+		btnAddDestino.setIcon(new ImageIcon("C:\\Users\\Gabri\\Documents\\Java\\Replicador\\icon\\SetaDireita.png"));
 		btnAddDestino.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				TreePath selectionPath = treeOrigem.getSelectionPath();
@@ -110,22 +114,37 @@ public class SetCreateTables extends JDialog {
 		btnAddDestino.setBounds(213, 135, 49, 39);
 		getContentPane().add(btnAddDestino);
 		
-		JButton btnX = new JButton("X");
-		btnX.setEnabled(false);
+		JButton btnX = new JButton("");
+		btnX.setIcon(new ImageIcon("C:\\Users\\Gabri\\Documents\\Java\\Replicador\\icon\\X.png"));
 		btnX.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				//try {
-				//	TreePath selectionPath = treeDestino.getSelectionPath();
-				//	if(selectionPath != null) {
-				//		DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) selectionPath.getLastPathComponent();
-		        //      DefaultTreeModel model = (DefaultTreeModel) treeDestino.getModel();
-		        //      model.removeNodeFromParent(selectedNode);
-		        //        treeDestino.updateUI();
-				//	}
-				//} catch (Exception e2) {
-				//		JOptionPane.showMessageDialog(null, "Não pode remover a raiz destino");
-				//}
+				TreePath selectionPath = treeDestino.getSelectionPath();
+				if (selectionPath != null) {
+	                DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) selectionPath.getLastPathComponent();
+	                if (selectedNode.isLeaf()) {
+	                	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
+	                	if(parentNode != null) {
+	                		try {
+	                			TabelaProcessarDAO tDAO = new TabelaProcessarDAO(connControle);
+	                			if(tDAO.selectCount(selectedNode.toString()) == 0){
+	                				dropTableDestino(selectedNode.toString());
+	                				parentNode.remove(selectedNode);
+				                    DefaultTreeModel model = (DefaultTreeModel) treeDestino.getModel();
+				                    model.nodeStructureChanged(parentNode);
+				                    treeDestino.updateUI();
+				                    JOptionPane.showMessageDialog(null, "Tabela removida com sucesso!");
+	                			} else {
+	                				JOptionPane.showMessageDialog(null, "A processo associados a essa tabela, remova os processo para poder remover a tabela!");
+	                			}
+	                		} catch (Exception e1) {
+								e1.printStackTrace();
+							}
+	                	}
+	                }
+				}
 			}
+
+			
 		});
 		btnX.setBounds(213, 185, 49, 39);
 		getContentPane().add(btnX);
@@ -153,6 +172,17 @@ public class SetCreateTables extends JDialog {
 		JSeparator separator_2_1_1 = new JSeparator();
 		separator_2_1_1.setBounds(10, 296, 459, 2);
 		getContentPane().add(separator_2_1_1);
+		
+		JButton btnRefresh = new JButton("");
+		btnRefresh.setIcon(new ImageIcon("C:\\Users\\Gabri\\Documents\\Java\\Replicador\\icon\\Sync.png"));
+		btnRefresh.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				 treeOrigem.updateUI();
+				 treeDestino.updateUI();
+			}
+		});
+		btnRefresh.setBounds(213, 42, 49, 39);
+		getContentPane().add(btnRefresh);
 		
 		buscarTabelasOrigem(connControle);
 		buscarTabelasDestino(connControle);
@@ -248,5 +278,12 @@ public class SetCreateTables extends JDialog {
 		}
 		
 		JOptionPane.showMessageDialog(null, "Tabela " + table + " Criada no destino com sucesso!");
+	}
+	private void dropTableDestino(String nome_tb_destino) throws SQLException {
+		Statement statementDest = connDestino.createStatement();
+		String sql = "DROP TABLE " + nome_tb_destino;
+		statementDest.executeUpdate(sql);
+		
+		System.out.println(nome_tb_destino + " Removida do banco destino");
 	}
 }
