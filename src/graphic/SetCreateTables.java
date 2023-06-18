@@ -35,6 +35,7 @@ public class SetCreateTables extends JDialog {
 	private Connection connOrigem, connDestino;
 	
 	public SetCreateTables() {
+		setResizable(false);
 		setTitle("Gerenciamento das tabelas");
 		setBounds(100, 100, 500, 340);
 		getContentPane().setLayout(null);

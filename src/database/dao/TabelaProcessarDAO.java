@@ -15,17 +15,20 @@ public class TabelaProcessarDAO {
 	private String selectAll = "select tp.*, p.nome_processo from tb_tabela_processo as tp left join tb_processo as p on tp.id_processo = p.id;";
 	private String insert = "INSERT INTO tb_tabela_processo VALUES (?, ?, ?);";
 	private String UpdateCodicao = "UPDATE tb_tabela_processo SET condicao = ? WHERE nome_tb_destino = ? and id_processo = ?";
+	private String Delete = "DELETE FROM tb_tabela_processo WHERE nome_tb_destino = ? and id_processo = ?";
 	
 	private PreparedStatement pstSelect;
 	private PreparedStatement pstSelectAll;
 	private PreparedStatement pstInsert;
 	private PreparedStatement pstUpdateCondicao;
+	private PreparedStatement pstDelete;
 	
 	public TabelaProcessarDAO(Connection conn) throws SQLException {
 		pstSelect = conn.prepareStatement(selectById);
 		pstSelectAll = conn.prepareStatement(selectAll);
 		pstInsert = conn.prepareStatement(insert);
 		pstUpdateCondicao = conn.prepareStatement(UpdateCodicao);
+		pstDelete = conn.prepareStatement(Delete);
 	}
 public ArrayList<TabelaProcessar> selectAll(int id_processo) throws SQLException {
 		
@@ -71,6 +74,12 @@ public ArrayList<TabelaProcessar> selectAll(int id_processo) throws SQLException
 			return false;
 		}
 	}
+	public boolean delete(String nome_tb_destino, int id_processo)  throws SQLException {
+		pstDelete.setString(1, nome_tb_destino);
+		pstDelete.setInt(2, id_processo);
+		return !pstDelete.execute();
+	}
+	
 	public boolean updateCondicao(int condicao, String nome_tb_destino, int id_processo) throws SQLException {
 		pstUpdateCondicao.setInt(1, condicao);
 		pstUpdateCondicao.setString(2, nome_tb_destino);
