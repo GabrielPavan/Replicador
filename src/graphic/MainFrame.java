@@ -15,6 +15,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import java.awt.Font;
+import java.awt.Toolkit;
 
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
@@ -41,6 +42,7 @@ public class MainFrame extends JFrame {
 	}
 	
 	public MainFrame() {
+		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\Gabri\\Downloads\\bancos-de-dados.png"));
 		setTitle("Replicador versão 1.0");
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
