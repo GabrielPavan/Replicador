@@ -19,24 +19,28 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 @SuppressWarnings({"serial","rawtypes","unchecked"})
-public class SetProcess extends JDialog {
+public class ShowProcess extends JDialog {
 	private JTable table;
 	private String processo = "";
+	private Integer processoId;
 	
 	public String getProcesso() {
 		return processo;
 	}
+	public Integer getProcessoId() {
+		return processoId;
+	}
 	
-	public SetProcess(JDialog parent) {
+	public ShowProcess(JDialog parent) {
 		setResizable(false);
 		setModal(true);
 		setLocationRelativeTo(parent);
 		setTitle("Processos existentes");
-		setBounds(100, 100, 500, 225);
+		setBounds(100, 100, 562, 225);
 		getContentPane().setLayout(null);
 		
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(10, 11, 464, 139);
+		scrollPane.setBounds(10, 11, 525, 139);
 		getContentPane().add(scrollPane);
 		
 		table = new JTable();
@@ -44,24 +48,26 @@ public class SetProcess extends JDialog {
 			new Object[][] {
 			},
 			new String[] {
-				"Processo", "Descri\u00E7\u00E3o", "Vers\u00E3o"
+				"ID", "Processo", "Descri\u00E7\u00E3o", "Vers\u00E3o"
 			}
 		) {
 			Class[] columnTypes = new Class[] {
-				String.class, String.class, String.class
+				Integer.class, String.class, String.class, String.class
 			};
 			public Class getColumnClass(int columnIndex) {
 				return columnTypes[columnIndex];
 			}
 		});
 		table.getColumnModel().getColumn(0).setResizable(false);
-		table.getColumnModel().getColumn(0).setPreferredWidth(60);
-		table.getColumnModel().getColumn(0).setMinWidth(30);
+		table.getColumnModel().getColumn(0).setPreferredWidth(15);
 		table.getColumnModel().getColumn(1).setResizable(false);
-		table.getColumnModel().getColumn(1).setPreferredWidth(215);
-		table.getColumnModel().getColumn(1).setMinWidth(80);
+		table.getColumnModel().getColumn(1).setPreferredWidth(100);
+		table.getColumnModel().getColumn(1).setMinWidth(60);
 		table.getColumnModel().getColumn(2).setResizable(false);
-		table.getColumnModel().getColumn(2).setPreferredWidth(25);
+		table.getColumnModel().getColumn(2).setPreferredWidth(215);
+		table.getColumnModel().getColumn(2).setMinWidth(80);
+		table.getColumnModel().getColumn(3).setResizable(false);
+		table.getColumnModel().getColumn(3).setPreferredWidth(25);
 		scrollPane.setViewportView(table);
 		
 		JLabel lblInfo = new JLabel("Novos processos serão adicionados nas proximas verções\r\n");
@@ -74,7 +80,8 @@ public class SetProcess extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					int linha = table.getSelectedRow();
-					processo = table.getValueAt(linha, 0).toString();
+					processoId = (Integer) table.getValueAt(linha, 0);
+					processo = table.getValueAt(linha, 1).toString();
 				} catch (Exception e2) {
 					
 				} finally {
@@ -82,7 +89,7 @@ public class SetProcess extends JDialog {
 				}
 			}
 		});
-		btnNewButton.setBounds(385, 157, 89, 23);
+		btnNewButton.setBounds(444, 157, 89, 23);
 		getContentPane().add(btnNewButton);
 		preencherTabela();
 		setVisible(true);
@@ -101,6 +108,7 @@ public class SetProcess extends JDialog {
 			
 			for (Processo processo : processos) {
 				model.addRow(new Object[] {
+						processo.getId(),
 						processo.getNome_processo(),
 						processo.getDescricao(),
 						"1.0"// add colon;
@@ -111,4 +119,6 @@ public class SetProcess extends JDialog {
 			e.printStackTrace();
 		}
 	}
+
+	
 }

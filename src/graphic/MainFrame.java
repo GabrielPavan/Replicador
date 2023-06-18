@@ -70,7 +70,7 @@ public class MainFrame extends JFrame {
 		mntmNewMenuItem_2.setHorizontalAlignment(SwingConstants.CENTER);
 		mntmNewMenuItem_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				new SetProcess(null);
+				new ShowProcess(null);
 			}
 		});
 		mnNewMenu.add(mntmNewMenuItem_2);
@@ -111,14 +111,23 @@ public class MainFrame extends JFrame {
 		mnNewMenu2.setHorizontalAlignment(SwingConstants.CENTER);
 		menuBar.add(mnNewMenu2);
 		
-		JMenuItem mntmNewMenuItem_3 = new JMenuItem("Tabelas");
+		JMenuItem mntmNewMenuItem_3 = new JMenuItem("Criar tabelas no destino");
 		mntmNewMenuItem_3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				new SetTablesProcess();
+				new SetCreateTables();
 			}
 		});
 		mntmNewMenuItem_3.setHorizontalAlignment(SwingConstants.CENTER);
 		mnNewMenu2.add(mntmNewMenuItem_3);
+		
+		JMenuItem mntmNewMenuItem_1 = new JMenuItem("Processo por tabela");
+		mntmNewMenuItem_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				new SetTableProcess();
+			}
+		});
+		mntmNewMenuItem_1.setHorizontalAlignment(SwingConstants.CENTER);
+		mnNewMenu2.add(mntmNewMenuItem_1);
 		
 		contentPane.add(progressBar);
 		contentPane.add(btnIniciarReplicação);

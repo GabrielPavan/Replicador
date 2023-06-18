@@ -6,7 +6,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -28,17 +27,16 @@ import java.awt.event.ActionEvent;
 import java.awt.Color;
 
 @SuppressWarnings("serial")
-public class SetTablesProcess extends JDialog {
+public class SetCreateTables extends JDialog {
 
-	private JTree treeOrigem;
+	private JTree treeOrigem, treeDestino;
 	private DefaultMutableTreeNode rootNodeOrigem, rootNodeDestino;
 	private Connection connControle;
 	private Connection connOrigem, connDestino;
 	
-		
-	public SetTablesProcess() {
+	public SetCreateTables() {
 		setTitle("Gerenciamento das tabelas");
-		setBounds(100, 100, 500, 380);
+		setBounds(100, 100, 500, 340);
 		getContentPane().setLayout(null);
 		try {
 			connControle = ConnectionFactory.getConnection("localhost", "5432", "Controle", "postgres",
@@ -55,7 +53,7 @@ public class SetTablesProcess extends JDialog {
 		getContentPane().add(treeOrigem);
 		
 		rootNodeDestino = new DefaultMutableTreeNode("Destino");
-		JTree treeDestino = new JTree(rootNodeDestino);
+		treeDestino = new JTree(rootNodeDestino);
 		treeDestino.setBounds(285, 45, 184, 240);
 		getContentPane().add(treeDestino);
 		
@@ -94,7 +92,7 @@ public class SetTablesProcess extends JDialog {
 	                }
 	                if (!itemExistente) {
 	                	try {
-							CreateTables(selectedObject);
+							CreateTable(selectedObject);
 						} catch (SQLException e1) {
 							JOptionPane.showConfirmDialog(null, "Erro ao criar a tabela no destino!");
 						}
@@ -108,7 +106,7 @@ public class SetTablesProcess extends JDialog {
 				}
 			}
 		});
-		btnAddDestino.setBounds(213, 124, 49, 39);
+		btnAddDestino.setBounds(213, 135, 49, 39);
 		getContentPane().add(btnAddDestino);
 		
 		JButton btnX = new JButton("X");
@@ -155,25 +153,6 @@ public class SetTablesProcess extends JDialog {
 		separator_2_1_1.setBounds(10, 296, 459, 2);
 		getContentPane().add(separator_2_1_1);
 		
-		JButton btnNewButton = new JButton("Add. Processo");
-		btnNewButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				TreePath selectionPath = treeDestino.getSelectionPath();
-				if(selectionPath != null) {
-					DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) selectionPath.getLastPathComponent();
-					SetProcess setProcess = new SetProcess(SetTablesProcess.this);
-					if (setProcess.getProcesso().trim().equals("")) {
-						return;
-					}
-					DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(setProcess.getProcesso());
-					selectedNode.add(newNode);
-		            DefaultTreeModel model = (DefaultTreeModel) treeDestino.getModel();
-		            model.nodeStructureChanged(selectedNode);
-				}
-			}
-		});
-		btnNewButton.setBounds(317, 307, 125, 23);
-		getContentPane().add(btnNewButton);
 		buscarTabelasOrigem(connControle);
 		buscarTabelasDestino(connControle);
 		setVisible(true);
@@ -228,7 +207,7 @@ public class SetTablesProcess extends JDialog {
 		}
 	}
 	
-	private void CreateTables(Object table) throws SQLException {
+	private void CreateTable(Object table) throws SQLException {
 		Statement statementOrigin = connOrigem.createStatement();
 		Statement statementDest = connDestino.createStatement();
 		ResultSet result = statementOrigin.executeQuery("SELECT * FROM " + table);
